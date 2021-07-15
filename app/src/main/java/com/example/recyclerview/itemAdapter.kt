@@ -40,10 +40,14 @@ class ItemAdapter(val context: Context, val items: ArrayList<String>) :
      */
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
 
+
         val item = items.get(position)
 
-        holder.tvItem.text = item
+        //put my hyperlink here
+        holder.cardViewItem.setOnClickListener{
+        }
 
+        holder.tvItem.text = item
         // Updating the background color according to the odd/even positions in list.
         if (position % 2 == 0) {
 //            holder.cardViewItem.setBackgroundColor(
