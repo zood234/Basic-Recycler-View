@@ -1,7 +1,7 @@
 package com.example.recyclerview
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.newsappwithapi.NewsApi
@@ -12,67 +12,108 @@ import retrofit2.Callback
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.net.URL
+
+
+var titleList = ArrayList<String>()
+var dateList = ArrayList<String>()
+var urlList = ArrayList<String>()
+var pictureList = ArrayList<String>()
+var categoryList = ArrayList<String>()
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        recyclerView()
+
+        getApiData()
+
 
     }
 
-fun getApiData(): ArrayList<String>{
-    var list = ArrayList<String>()
+    fun getApiData(): ArrayList<String>{
+        //This one gets added
 
-    //This one gets added
-    list.add("THIS STUFF")
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api.nytimes.com/svc/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val service = retrofit.create(NewsApi::class.java)
+        val call = service.getNews()
+        call.enqueue(object : Callback<NewsResponse> {
 
-    val retrofit = Retrofit.Builder()
-        .baseUrl("https://api.nytimes.com/svc/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-    val service = retrofit.create(NewsApi::class.java)
-    val call = service.getNews()
-    call.enqueue(object : Callback<NewsResponse> {
-
-        //I Thinks this part is the problem  for some for some reason recyclerView() just skips it
-        override fun onResponse(call: Call<NewsResponse>, response: Response<NewsResponse>, ) {
+            override fun onResponse(call: Call<NewsResponse>, response: Response<NewsResponse>) {
 
 
-            if (response.code() == 200) {
-                val newsResponse = response.body()!!
+                if (response.code() == 200) {
+                    val newsResponse = response.body()!!
 
-                list.add("This WAS NOT ADDED")
-                list.add(newsResponse.results[2].title)
-                list.add(newsResponse.results[3].title)
+                    for (i in 1..newsResponse.results.size-1) {
+                        titleList.add(newsResponse.results[i].title)
 
-                val stringBuilder = "Section is : " + newsResponse.section +
-                        "\n" + list[1] +
-                        "\n" + newsResponse.results[1].title +
-                        "\n" + newsResponse.results[2].title +
-                        "\n" + newsResponse.results[3].title +
-                        "\n" + newsResponse.results[4].title + "bjhkh ddgg"
-                textView.text = stringBuilder
+                    }
+
+                    for (i in 1..newsResponse.results.size-1) {
+                        dateList.add(newsResponse.results[i].published_date)
+
+                    }
+
+                    for (i in 1..newsResponse.results.size-1) {
+                        urlList.add(newsResponse.results[i].url)
+
+                    }
+                    for (i in 1..newsResponse.results.size-1) {
+                        pictureList.add(newsResponse.results[i].multimedia[0].url) // need to change
+
+                    }
+                    for (i in 1..newsResponse.results.size-1) {
+                        categoryList.add(newsResponse.results[i].section)
+
+                    }
+
+                    recyclerView()
+
+                }
             }
-        }
-        override fun onFailure(call: Call<NewsResponse>, t: Throwable) {
-        }
-    })
-    return list
+            override fun onFailure(call: Call<NewsResponse>, t: Throwable) {
+                //   newsData!!.text = t.message
+            }
+        })
+        return titleList
 
-}
+    }
 
 
     fun recyclerView(){
         // Adapter class is initialized and list is passed in the param.
-        val itemAdapter = ItemAdapter(this, getApiData())
+
+        val itemAdapter = ItemAdapter(this, title(), date(), cat(),picture(),url())
 
         recycler_view_items.layoutManager = LinearLayoutManager(this)
 
         // adapter instance is set to the recyclerview to inflate the items.
         recycler_view_items.adapter = itemAdapter
+        itemAdapter.notifyDataSetChanged()
+
     }
 
+    fun title(): ArrayList<String>{
+        return titleList
+    }
 
+    fun date(): ArrayList<String>{
+        return dateList
+    }
 
+    fun url(): ArrayList<String>{
+        return urlList
+    }
+
+    fun cat(): ArrayList<String>{
+        return categoryList
+    }
+
+    fun picture(): ArrayList<String>{
+        return pictureList
+    }
 }
